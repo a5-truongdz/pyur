@@ -1,14 +1,13 @@
 from pycman.config import init_with_config
 from pyalpm import Handle
 from aur import AURPackage
-from colorama import Fore, Style
 
 class Conflicts(Exception):
     pass
 
 def create_handler() -> Handle:
     """
-    Create a handle with the config in /etc/pacman.conf.
+    Creates a handle with the config in /etc/pacman.conf.
 
     Returns:
         pyalpm.Handle.
@@ -20,7 +19,7 @@ def is_locally_installed(
     _package_name: str
 ) -> bool:
     """
-    Check if a package is locally-installed.
+    Checks if a package is locally-installed.
 
     Parameter:
         _handler: A handler created from create_handler().
@@ -38,7 +37,7 @@ def check_for_conflicts(
     _aur_package: AURPackage
 ) -> None:
     """
-    Check if the AUR package conflicts with any locally-installed packages.
+    Checks if the AUR package conflicts with any locally-installed packages.
 
     Parameters:
         _handler: A handler created from create_handler()
@@ -60,7 +59,7 @@ def get_version(
     _package_name: str
 ) -> str:
     """
-    Get the version of a package.
+    Gets the version of a package.
 
     Parameters:
         _handler: A handler created from create_handler().

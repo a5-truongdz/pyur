@@ -9,6 +9,7 @@ from colorama import Fore, Style
 import aur
 import sys
 import local
+import sync
 
 packages = parse_arguments()
 
@@ -44,6 +45,25 @@ if not install_packages:
     sys.exit()
 
 print("resolving dependencies...")
+
+# placeholder, only 1st depth
+sync_dependencies: list[tuple[str, str]] = []
+aur_dependencies: list[aur.AURPackage] = []
+for package in install_packages:
+    for dependency in package.dependencies:
+        if local.is_locally_installed(
+            handler,
+            dependency
+        ):
+            continue
+        try:
+            repo: str = sync.get_repo(
+                handler,
+                dependency
+            ); sync_dependencies.append((repo, dependency))
+        except sync.NotExists:
+            aur_dependencies.append(aur.AURRPCRequests(dependency).construct_package())
+
 print("looking for conflicting packages...")
 
 for package in install_packages:

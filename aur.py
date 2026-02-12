@@ -12,7 +12,7 @@ class NotExists(Exception):
 
 class AURRPCRequests:
     """
-    Create a response with the RPC API of the package when initialized.
+    Creates with the RPC API of the package when initialized.
 
     Parameters:
         _package_name: The name of the package.
