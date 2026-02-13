@@ -1,11 +1,14 @@
 from typing import NamedTuple, Any
+from pyalpm import Handle
+import subprocess
 import requests
 
 class AURPackage(NamedTuple):
     name: str
     version: str
-    dependencies: list[str]
     conflicts: list[str]
+
+from local import is_locally_installed, get_version
 
 class NotExists(Exception):
     pass
@@ -34,6 +37,25 @@ class AURRPCRequests:
         return AURPackage(
             name = self._package_name,
             version = self._requests["results"][0]["Version"],
-            dependencies = self._requests["results"][0].get("Depends", []),    # Avoid packages with no dependency (rare).
             conflicts = self._requests["results"][0].get("Conflicts", [])
         )
+
+def is_up_to_date(
+    _handler: Handle,
+    _package: AURPackage
+) -> bool:
+    if is_locally_installed(
+        _handler,
+        _package.name
+    ):
+        _local_version: str = get_version(
+            _handler,
+            _package.name
+        ); _cmp: int = int(subprocess.run(
+            ["vercmp", _local_version, _package.version],
+            text = True,
+            capture_output = True
+        ).stdout)
+        if _cmp == 0:
+            return True
+    return False

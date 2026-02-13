@@ -9,7 +9,6 @@ from colorama import Fore, Style
 import aur
 import sys
 import local
-import sync
 
 packages = parse_arguments()
 
@@ -24,49 +23,28 @@ for package in packages:
         ); sys.exit(1)
 
 handler: Handle = local.create_handler()
-install_packages: list[aur.AURPackage] = []
+not_utd_packages: list[aur.AURPackage] = []
 
 for package in constructed_packages:
-    if local.is_locally_installed(
+    if aur.is_up_to_date(
         handler,
-        package.name
+        package
     ):
-        version: str = local.get_version(
-            handler,
-            package.name
-        )
-        if version == package.version:
-            print(warning(f"{package.name}-{version} is up to date -- skipping"))
-            continue
-    install_packages.append(package)
+        print(warning(f"{package.name}-{package.version} is up to date -- skipping"))
+        continue
+    not_utd_packages.append(package)
 
-if not install_packages:
+if not not_utd_packages:
     print(" there is nothing to do")
     sys.exit()
 
 print("resolving dependencies...")
-
-# placeholder, only 1st depth
-sync_dependencies: list[tuple[str, str]] = []
-aur_dependencies: list[aur.AURPackage] = []
-for package in install_packages:
-    for dependency in package.dependencies:
-        if local.is_locally_installed(
-            handler,
-            dependency
-        ):
-            continue
-        try:
-            repo: str = sync.get_repo(
-                handler,
-                dependency
-            ); sync_dependencies.append((repo, dependency))
-        except sync.NotExists:
-            aur_dependencies.append(aur.AURRPCRequests(dependency).construct_package())
-
 print("looking for conflicting packages...")
 
-for package in install_packages:
+build_packages: list[aur.AURPackage] = []
+remove_packages: list[str] = []
+
+for package in not_utd_packages:
     try:
         local.check_for_conflicts(
             handler,
@@ -87,3 +65,8 @@ for package in install_packages:
                 file = sys.stderr
             ); print(f"{Style.BRIGHT}{Fore.BLUE}::{Fore.WHITE} {package.name}-{package.version} and {e.args[0]}-{e.args[1]} are in conflict")
             sys.exit(1)
+        remove_packages.append(e.args[0])
+    build_packages.append(package)
+
+print(build_packages)
+print(remove_packages)
