@@ -5,7 +5,7 @@ from local import is_locally_installed
 def better_find_satisfier(
     _handler: Handle,
     _query: str
-) -> str:
+) -> tuple[str, str]:
     """
     Returns the package provided the query.
 
@@ -20,15 +20,15 @@ def better_find_satisfier(
             _query
         )
         if _package is not None:
-            return _package.name
-    return ""    # Unreachable, i believe in ALPM =D
+            return (database.name, _package.name)
+    return ("", "")    # Unreachable, i believe in ALPM =D
 
 def build_order(
     _handler: Handle,
     _package: aur.AURPackage,
     _seen: set[str],
     _build_order: list[aur.AURPackage],
-    _sync_dependencies: set[str]
+    _sync_dependencies: set[tuple[str, str]]
 ) -> None:
     """
     Generates a build order for an AUR package.
@@ -48,15 +48,15 @@ def build_order(
         try:
             _dependency_package: aur.AURPackage = aur.AURRPCRequests(dependency).construct_package()
         except aur.NotExists:
-            _name: str = better_find_satisfier(
+            _name: tuple[str, str] = better_find_satisfier(
                 _handler,
                 dependency
             )
             if not is_locally_installed(
                 _handler,
-                _name
+                _name[1]
             ):
-                _sync_dependencies.add(dependency)
+                _sync_dependencies.add(_name)
             continue
         build_order(
             _handler,
