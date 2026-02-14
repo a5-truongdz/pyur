@@ -39,10 +39,14 @@ if not not_utd_packages:
     sys.exit()
 
 print("resolving dependencies...")
+
+# TODO: An unordered set containing all dependencies, ONLY for printing the package list.
+#       Dependencies will get handled by `makepkg -s`.
+
 print("looking for conflicting packages...")
 
 build_packages: list[aur.AURPackage] = []
-remove_packages: list[str] = []
+remove_packages: set[str] = set()
 
 for package in not_utd_packages:
     try:
@@ -53,8 +57,8 @@ for package in not_utd_packages:
     except local.Conflicts as e:
         choice: str = input(conflict(
             package,
-            e.args[0],
-            e.args[1]
+            e._name,
+            e._version
         )).lower()
         if choice != "y":
             print(
@@ -63,10 +67,7 @@ for package in not_utd_packages:
             ); print(
                 error("failed to prepare transaction (conflicting dependencies)"),
                 file = sys.stderr
-            ); print(f"{Style.BRIGHT}{Fore.BLUE}::{Fore.WHITE} {package.name}-{package.version} and {e.args[0]}-{e.args[1]} are in conflict")
+            ); print(f"{Style.BRIGHT}{Fore.BLUE}::{Fore.WHITE} {package.name}-{package.version} and {e._name}-{e._version} are in conflict")
             sys.exit(1)
-        remove_packages.append(e.args[0])
+        remove_packages.add(e._name)
     build_packages.append(package)
-
-print(build_packages)
-print(remove_packages)

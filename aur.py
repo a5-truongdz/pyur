@@ -1,11 +1,11 @@
 from typing import NamedTuple, Any
-from pyalpm import Handle
-import subprocess
+from pyalpm import Handle, vercmp
 import requests
 
 class AURPackage(NamedTuple):
     name: str
     version: str
+    dependencies: list[str]
     conflicts: list[str]
 
 from local import is_locally_installed, get_version
@@ -37,6 +37,7 @@ class AURRPCRequests:
         return AURPackage(
             name = self._package_name,
             version = self._requests["results"][0]["Version"],
+            dependencies = self._requests["results"][0].get("Depends", []),
             conflicts = self._requests["results"][0].get("Conflicts", [])
         )
 
@@ -44,18 +45,29 @@ def is_up_to_date(
     _handler: Handle,
     _package: AURPackage
 ) -> bool:
+    """
+    Checks if a local package is up-to-date with the provided AUR package.
+
+    Parameters:
+        _handler: A handler created from local.create_handler().
+        _package: The AUR package.
+
+    Returns:
+        bool.
+    """
+
+    _local_version: str = ""
     if is_locally_installed(
         _handler,
         _package.name
     ):
-        _local_version: str = get_version(
+        _local_version = get_version(
             _handler,
             _package.name
-        ); _cmp: int = int(subprocess.run(
-            ["vercmp", _local_version, _package.version],
-            text = True,
-            capture_output = True
-        ).stdout)
+        ); _cmp: int = vercmp(
+            _local_version,
+            _package.version
+        )
         if _cmp == 0:
             return True
     return False

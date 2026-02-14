@@ -3,7 +3,17 @@ from pyalpm import Handle
 from aur import AURPackage
 
 class Conflicts(Exception):
-    pass
+    def __init__(
+        self,
+        _name: str,
+        _version: str
+    ) -> None:
+        self._name: str = _name
+        self._version: str = _version
+        super().__init__(
+            _name,
+            _version
+        )
 
 def create_handler() -> Handle:
     """
