@@ -6,7 +6,7 @@ from arguments import parse_arguments
 from cosmetics import error, warning, conflict
 from pyalpm import Handle
 from colorama import Fore, Style
-from dependencies import build_order
+from dependencies import build_order, sync_order
 import aur
 import sys
 import local
@@ -70,22 +70,33 @@ def main() -> int:
             remove_packages.add(e._name)
         build_packages.append(package)
 
-    seen: set[str] = set()
+    aur_seen: set[str] = set()
     _build_order: list[aur.AURPackage] = []
     sync_dependencies: set[tuple[str, str]] = set()
 
     for package in build_packages:
-        print(f"visiting {package.name}")    # Verbose
+        print(package)
         build_order(
             handler,
             package,
-            seen,
+            aur_seen,
             _build_order,
             sync_dependencies
         )
+    
+    sync_seen: set[str] = set()
+    _sync_order: list[tuple[str, str]] = []
+    for package in sync_dependencies:
+        print(package)
+        sync_order(
+            handler,
+            package,
+            sync_seen,
+            _sync_order
+        )
 
     print(_build_order)
-    print(sync_dependencies)
+    print(_sync_order)
 
     return 0
 
