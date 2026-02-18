@@ -3,13 +3,15 @@ pyur: An AUR helper that tries to replicate exactly how `pacman` output.
 """
 
 from arguments import parse_arguments
-from cosmetics import error, warning, conflict
+from cosmetics import error, warning, conflict, VerbosePkgList, info
 from pyalpm import Handle
 from colorama import Fore, Style
 from dependencies import build_order, sync_order
+
 import aur
 import sys
 import local
+import pacman
 
 def main() -> int:
     packages = parse_arguments()
@@ -57,15 +59,15 @@ def main() -> int:
                 package,
                 e._name,
                 e._version
-            )).lower()
-            if choice != "y":
+            )).strip().lower()
+            if choice and choice != "y":
                 print(
                     error("unresolvable package conflicts detected"),
                     file = sys.stderr
                 ); print(
                     error("failed to prepare transaction (conflicting dependencies)"),
                     file = sys.stderr
-                ); print(f"{Style.BRIGHT}{Fore.BLUE}::{Fore.WHITE} {package.name}-{package.version} and {e._name}-{e._version} are in conflict")
+                    ); print(info(f"{package.name}-{package.version} and {e._name}-{e._version} are in conflict"))
                 return 1
             remove_packages.add(e._name)
         build_packages.append(package)
@@ -75,7 +77,6 @@ def main() -> int:
     sync_dependencies: set[tuple[str, str]] = set()
 
     for package in build_packages:
-        print(package)
         build_order(
             handler,
             package,
@@ -87,7 +88,6 @@ def main() -> int:
     sync_seen: set[str] = set()
     _sync_order: list[tuple[str, str]] = []
     for package in sync_dependencies:
-        print(package)
         sync_order(
             handler,
             package,
@@ -95,8 +95,36 @@ def main() -> int:
             _sync_order
         )
 
-    print(_build_order)
-    print(_sync_order)
+    for line in VerbosePkgList(
+        _build_order,
+        _sync_order,
+        remove_packages
+    ):
+        print(line)
+
+    confirm: str = input(info(f"Proceed with installation? [Y/n] ")).strip().lower()
+    if confirm and confirm != "y":
+        return 1
+
+    if remove_packages:
+        print(info("Removing conflicting packages..."))
+        return_code: int = pacman.call(
+            "R",
+            list(remove_packages),
+            8 + len(remove_packages)
+        )
+        if return_code != 0:
+            return return_code
+
+    if _sync_order:
+        print(info(f"Installing sync dependencies..."))
+        return_code: int = pacman.call(
+            "S",
+            [f"{i[0]}/{i[1]}" for i in _sync_order],
+            10 + len(_sync_order)
+        )
+        if return_code != 0:
+            return return_code
 
     return 0
 
