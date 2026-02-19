@@ -2,6 +2,18 @@
 pyur: An AUR helper that tries to replicate exactly how `pacman` output.
 """
 
+import sys
+import os
+
+# Putting root check here to avoid uninstalled pip packages globally
+# Which leads to ImportError
+if os.getuid() == 0:
+    print(
+        "error: you cannot perform this operation unless you are not root.",
+        file = sys.stderr
+    ); sys.exit(1)
+
+
 from arguments import parse_arguments
 from cosmetics import error, warning, conflict, VerbosePkgList, info
 from pyalpm import Handle
@@ -9,10 +21,12 @@ from dependencies import build_order, sync_order
 from cloner import retrieve_pkgbuilds
 
 import aur
-import sys
 import local
 import pacman
-import os
+import subprocess
+import glob
+
+CACHE_PATH: str = os.path.expanduser("~/.cache/pyur")
 
 def main() -> int:
     packages = parse_arguments()
@@ -125,21 +139,35 @@ def main() -> int:
         if return_code != 0:
             return return_code
 
-    CACHE_PATH: str = os.path.expanduser("~/.cache/pyur")
-    if not os.path.exists(CACHE_PATH):
-        os.makedirs(
-            CACHE_PATH,
-            exist_ok = True
-        )
+    os.makedirs(
+        CACHE_PATH,
+        exist_ok = True
+    )
 
-    retrieve_pkgbuilds(
+    plan: None | list[aur.AURPackage] = retrieve_pkgbuilds(
         _build_order,
         CACHE_PATH
     )
 
-    print(info(f"Building PKGBUILDs..."))
+    print(info(f"Building and installing PKGBUILDs..."))
     for package in _build_order:
-        print(f"building {package.name}...")
+        compiled_packages: list[str] = glob.glob(f"{CACHE_PATH}/{package.name}/{package.name}*.pkg.tar.zst")
+        if not compiled_packages and plan is not None and not package in plan:
+            print(f"building {package.name}...")
+            proc: subprocess.CompletedProcess = subprocess.run(
+                ["makepkg", "--noconfirm"],
+                cwd = f"{CACHE_PATH}/{package.name}"
+            )
+            if proc.returncode != 0:
+                return proc.returncode
+            compiled_packages: list[str] = glob.glob(f"{CACHE_PATH}/{package.name}/{package.name}*.pkg.tar.zst")
+        return_code: int = pacman.call(
+            "U",
+            compiled_packages,
+            10 + len(compiled_packages)
+        )
+        if return_code != 0:
+            return return_code
 
     return 0
 

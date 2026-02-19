@@ -97,13 +97,16 @@ def apply_repo_action(
 def retrieve_pkgbuilds(
     _package_list: list[AURPackage],
     _cache_path: str
-) -> None:
+) -> None | list[AURPackage]:
     """
     Retrieves PKGBUILDs with proper `pacman`-like output.
 
     Parameters:
         _package_list: The package list.
         _cache_path: The cache path.
+
+    Returns:
+        None | list[AURPackage].
     """
 
     _plan: list[tuple[AURPackage, RepoAction]] = []
@@ -124,3 +127,4 @@ def retrieve_pkgbuilds(
             _cache_path,
             _action
         )
+    return [package[0] for package in _plan]
