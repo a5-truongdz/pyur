@@ -1,6 +1,6 @@
 from pycman.config import init_with_config
 from pyalpm import Handle
-from aur import AURPackage
+from pyur.aur import AURPackage
 
 class Conflicts(Exception):
     def __init__(

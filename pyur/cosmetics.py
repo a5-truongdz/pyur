@@ -1,5 +1,5 @@
 from colorama import Fore, Style
-from aur import AURPackage
+from pyur.aur import AURPackage
 
 def error(_message: str) -> str:
     """

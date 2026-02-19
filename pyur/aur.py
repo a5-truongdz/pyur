@@ -8,7 +8,7 @@ class AURPackage(NamedTuple):
     dependencies: list[str]
     conflicts: list[str]
 
-from local import is_locally_installed, get_version
+from pyur.local import is_locally_installed, get_version
 
 class NotExists(Exception):
     pass

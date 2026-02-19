@@ -1,0 +1,15 @@
+[project]
+name = "pyur"
+version = "1.1"
+description = "An AUR helper that tries to replicate exactly how `pacman` output."
+requires-python = ">=3.10"
+dependencies = [
+    "GitPython",
+    "requests",
+    "colorama",
+    "pyalpm",
+    "pycman"
+]
+
+[project.scripts]
+pyur = "pyur.main:main"

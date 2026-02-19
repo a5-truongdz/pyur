@@ -14,15 +14,15 @@ if os.getuid() == 0:
     ); sys.exit(1)
 
 
-from arguments import parse_arguments
-from cosmetics import error, warning, conflict, VerbosePkgList, info
+from pyur.arguments import parse_arguments
+from pyur.cosmetics import error, warning, conflict, VerbosePkgList, info
 from pyalpm import Handle
-from dependencies import build_order, sync_order
-from cloner import retrieve_pkgbuilds
+from pyur.dependencies import build_order, sync_order
+from pyur.cloner import retrieve_pkgbuilds
 
-import aur
-import local
-import pacman
+import pyur.aur
+import pyur.local
+import pyur.pacman
 import subprocess
 import glob
 
@@ -31,21 +31,21 @@ CACHE_PATH: str = os.path.expanduser("~/.cache/pyur")
 def main() -> int:
     packages = parse_arguments()
 
-    constructed_packages: list[aur.AURPackage] = []
+    constructed_packages: list[pyur.aur.AURPackage] = []
     for package in packages:
         try:
-            constructed_packages.append(aur.AURRPCRequests(package).construct_package())
-        except aur.NotExists:
+            constructed_packages.append(pyur.aur.AURRPCRequests(package).construct_package())
+        except pyur.aur.NotExists:
             print(
                 error(f"target not found: {package}"),
                 file = sys.stderr
             ); return 1
 
-    handler: Handle = local.create_handler()
-    not_utd_packages: list[aur.AURPackage] = []
+    handler: Handle = pyur.local.create_handler()
+    not_utd_packages: list[pyur.aur.AURPackage] = []
 
     for package in constructed_packages:
-        if aur.is_up_to_date(
+        if pyur.aur.is_up_to_date(
             handler,
             package
         ):
@@ -60,16 +60,16 @@ def main() -> int:
     print("resolving dependencies...")
     print("looking for conflicting packages...")
 
-    build_packages: list[aur.AURPackage] = []
+    build_packages: list[pyur.aur.AURPackage] = []
     remove_packages: set[str] = set()
 
     for package in not_utd_packages:
         try:
-            local.check_for_conflicts(
+            pyur.local.check_for_conflicts(
                 handler,
                 package
             )
-        except local.Conflicts as e:
+        except pyur.local.Conflicts as e:
             choice: str = input(conflict(
                 package,
                 e._name,
@@ -88,7 +88,7 @@ def main() -> int:
         build_packages.append(package)
 
     aur_seen: set[str] = set()
-    _build_order: list[aur.AURPackage] = []
+    _build_order: list[pyur.aur.AURPackage] = []
     sync_dependencies: set[tuple[str, str]] = set()
 
     for package in build_packages:
@@ -122,7 +122,7 @@ def main() -> int:
         return 1
 
     if remove_packages:
-        return_code: int = pacman.call(
+        return_code: int = pyur.pacman.call(
             "R",
             list(remove_packages),
             8 + len(remove_packages)
@@ -131,7 +131,7 @@ def main() -> int:
             return return_code
 
     if _sync_order:
-        return_code: int = pacman.call(
+        return_code: int = pyur.pacman.call(
             "S",
             [f"{i[0]}/{i[1]}" for i in _sync_order],
             10 + len(_sync_order)
@@ -144,7 +144,7 @@ def main() -> int:
         exist_ok = True
     )
 
-    plan: None | list[aur.AURPackage] = retrieve_pkgbuilds(
+    plan: None | list[pyur.aur.AURPackage] = retrieve_pkgbuilds(
         _build_order,
         CACHE_PATH
     )
@@ -161,7 +161,7 @@ def main() -> int:
             if proc.returncode != 0:
                 return proc.returncode
             compiled_packages: list[str] = glob.glob(f"{CACHE_PATH}/{package.name}/{package.name}*.pkg.tar.zst")
-        return_code: int = pacman.call(
+        return_code: int = pyur.pacman.call(
             "U",
             compiled_packages,
             10 + len(compiled_packages)

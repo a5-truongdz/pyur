@@ -3,6 +3,14 @@
 # pyur
 An AUR helper that tries to replicate exactly how `pacman` output.
 
+# Installation
+```
+$ cd ~
+$ git clone https://github.com/a5-truongdz/pyur.git
+$ cd pyur
+$ pip install --user .
+```
+
 # Usage
 1. Installing packages:
 ```

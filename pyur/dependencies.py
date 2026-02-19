@@ -1,6 +1,6 @@
-import aur
+import pyur.aur
 from pyalpm import Handle, find_satisfier, Package, DB
-from local import is_locally_installed
+from pyur.local import is_locally_installed
 
 def better_find_satisfier(
     _handler: Handle,
@@ -25,9 +25,9 @@ def better_find_satisfier(
 
 def build_order(
     _handler: Handle,
-    _package: aur.AURPackage,
+    _package: pyur.aur.AURPackage,
     _seen: set[str],
-    _build_order: list[aur.AURPackage],
+    _build_order: list[pyur.aur.AURPackage],
     _sync_dependencies: set[tuple[str, str]]
 ) -> None:
     """
@@ -46,8 +46,8 @@ def build_order(
     _seen.add(_package.name)
     for dependency in _package.dependencies:
         try:
-            _dependency_package: aur.AURPackage = aur.AURRPCRequests(dependency).construct_package()
-        except aur.NotExists:
+            _dependency_package: pyur.aur.AURPackage = pyur.aur.AURRPCRequests(dependency).construct_package()
+        except pyur.aur.NotExists:
             _name: tuple[str, str] = better_find_satisfier(
                 _handler,
                 dependency

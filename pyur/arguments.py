@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, Namespace
-from cosmetics import error
+from pyur.cosmetics import error
 import sys
 
 def parse_arguments() -> list[str]:
@@ -25,8 +25,15 @@ def parse_arguments() -> list[str]:
     ); _parser.add_argument(
         "-h", "--help",
         action = "store_true"
+    ); _parser.add_argument(
+        "-v", "--version",
+        action = "store_true"
     ); _args: Namespace = _parser.parse_args()
     
+    if _args.version:
+        print("v1.1")
+        sys.exit()
+
     if _args.help:
         print("""usage:  pyur [operation] <package(s)>
 operation:

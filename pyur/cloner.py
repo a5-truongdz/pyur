@@ -1,6 +1,6 @@
-from aur import AURPackage
+from pyur.aur import AURPackage
 from enum import Enum
-from cosmetics import info
+from pyur.cosmetics import info
 
 import git
 import os
