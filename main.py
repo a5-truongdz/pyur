@@ -5,13 +5,14 @@ pyur: An AUR helper that tries to replicate exactly how `pacman` output.
 from arguments import parse_arguments
 from cosmetics import error, warning, conflict, VerbosePkgList, info
 from pyalpm import Handle
-from colorama import Fore, Style
 from dependencies import build_order, sync_order
+from cloner import retrieve_pkgbuilds
 
 import aur
 import sys
 import local
 import pacman
+import os
 
 def main() -> int:
     packages = parse_arguments()
@@ -107,7 +108,6 @@ def main() -> int:
         return 1
 
     if remove_packages:
-        print(info("Removing conflicting packages..."))
         return_code: int = pacman.call(
             "R",
             list(remove_packages),
@@ -117,7 +117,6 @@ def main() -> int:
             return return_code
 
     if _sync_order:
-        print(info(f"Installing sync dependencies..."))
         return_code: int = pacman.call(
             "S",
             [f"{i[0]}/{i[1]}" for i in _sync_order],
@@ -125,6 +124,22 @@ def main() -> int:
         )
         if return_code != 0:
             return return_code
+
+    CACHE_PATH: str = os.path.expanduser("~/.cache/pyur")
+    if not os.path.exists(CACHE_PATH):
+        os.makedirs(
+            CACHE_PATH,
+            exist_ok = True
+        )
+
+    retrieve_pkgbuilds(
+        _build_order,
+        CACHE_PATH
+    )
+
+    print(info(f"Building PKGBUILDs..."))
+    for package in _build_order:
+        print(f"building {package.name}...")
 
     return 0
 

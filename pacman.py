@@ -9,8 +9,20 @@ from termios import TIOCSWINSZ
 def call(
     _action: str,
     _package_list: list[str],
-    _skip: int    # if it works, dont touch it
+    _skip: int
 ) -> int:
+    """
+    Calls `pacman` (in a PTY for colors) with the specified _action and _package_list, skipping _skip first lines.
+
+    Parameters:
+        _action: "S", "R" or "U".
+        _package_list: The package list.
+        _skip: How many lines to skip.
+
+    Returns:
+        int.
+    """
+
     _master, _slave = openpty()
     _cols, _rows = get_terminal_size()
     ioctl(
@@ -24,7 +36,7 @@ def call(
             0
         )
     ); _proc: Popen = Popen(
-        ["sudo", "pacman", f"-{_action}", "--noconfirm"] + _package_list,
+        ["sudo", "pacman", f"-{_action}", "--noconfirm", "--noprogressbar", "--disable-download-timeout"] + _package_list,
         stdout=_slave,
         stderr=_slave,
         stdin=_slave,
