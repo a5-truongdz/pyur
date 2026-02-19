@@ -14,7 +14,7 @@ $ pip install --user .
 # Usage
 1. Installing packages:
 ```
-$ python main.py [packages]
+$ pyur [packages]
 ```
 2. Uninstalling packages: Please use `pacman -R` itself.
 3. Clear cache:
