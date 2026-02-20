@@ -171,9 +171,12 @@ def main() -> int:
 
     return 0
 
-if __name__ == "__main__":
+def _launch() -> None:
     try:
         sys.exit(main())
     except KeyboardInterrupt:
         print("\nInterrupt signal received")
         sys.exit(130)
+
+if __name__ == "__main__":
+    _launch()

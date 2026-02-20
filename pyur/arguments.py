@@ -31,7 +31,7 @@ def parse_arguments() -> list[str]:
     ); _args: Namespace = _parser.parse_args()
     
     if _args.version:
-        print("v1.1")
+        print("v1.4")
         sys.exit()
 
     if _args.help:

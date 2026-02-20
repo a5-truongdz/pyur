@@ -1,6 +1,6 @@
 [project]
 name = "pyur"
-version = "1.1"
+version = "1.4"
 description = "An AUR helper that tries to replicate exactly how `pacman` output."
 requires-python = ">=3.10"
 dependencies = [
