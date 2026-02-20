@@ -7,8 +7,7 @@ dependencies = [
     "GitPython",
     "requests",
     "colorama",
-    "pyalpm",
-    "pycman"
+    "pyalpm"
 ]
 
 [project.scripts]
