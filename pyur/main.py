@@ -144,7 +144,7 @@ def main() -> int:
         exist_ok = True
     )
 
-    plan: None | list[pyur.aur.AURPackage] = retrieve_pkgbuilds(
+    plan: list[str] = retrieve_pkgbuilds(
         _build_order,
         CACHE_PATH
     )
@@ -152,7 +152,7 @@ def main() -> int:
     print(info(f"Building and installing PKGBUILDs..."))
     for package in _build_order:
         compiled_packages: list[str] = glob.glob(f"{CACHE_PATH}/{package.name}/{package.name}*.pkg.tar.zst")
-        if not compiled_packages and plan is not None and not package in plan:
+        if not compiled_packages or package.name in plan:
             print(f"building {package.name}...")
             proc: subprocess.CompletedProcess = subprocess.run(
                 ["makepkg", "--noconfirm"],

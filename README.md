@@ -24,4 +24,4 @@ $ rm -r ~/.cache/pyur
 
 # TODO
 - Update/Upgrade
-- Performance improve
+- Performance improve: done
